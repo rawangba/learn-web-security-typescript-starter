@@ -13,7 +13,7 @@ type StoredSession = {
   csrf_token: string;
   expires_at: string;
   revoked_at: string | null;
-  last_authenticated_at: string;
+
   created_at: string;
 };
 
@@ -76,13 +76,21 @@ export function getCurrentSession(
   }
 
   const storedSession = findStoredSession(db, fastHash(token));
-  if (!storedSession || new Date(storedSession.expires_at) <= new Date()) {
+  if (!storedSession || new Date(storedSession.expires_at) <= new Date() || storedSession.revoked_at) {
+    if (storedSession) {
+      const now = new Date();
+      storedSession.revoked_at = now.toISOString();
+    }
+    revokeSession(db, token);
     return undefined;
   }
   const session = { ...storedSession, token };
 
   const user = findUserById(db, session.user_id);
   if (!user) {
+    const now = new Date();
+    session.revoked_at = now.toISOString();
+    revokeSession(db, token);
     return undefined;
   }
 
@@ -113,6 +121,7 @@ function getCookie(
 }
 
 export function revokeSession(db: DatabaseSync, token: string): void {
+  console.log("revokeSession()");
   db.prepare(`
       UPDATE sessions
       SET revoked_at = ?
