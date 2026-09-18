@@ -121,7 +121,6 @@ function getCookie(
 }
 
 export function revokeSession(db: DatabaseSync, token: string): void {
-  console.log("revokeSession()");
   db.prepare(`
       UPDATE sessions
       SET revoked_at = ?

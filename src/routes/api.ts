@@ -8,6 +8,7 @@ import {
   listOrdersForUser,
 } from "../orders/index.ts";
 import { listAllProducts } from "../products.ts";
+import { findApiKey, type ApiKey } from "../auth/apiKeys.ts";
 
 export function createApiRouter(deps: Dependencies): Router {
   const { db } = deps;
@@ -50,6 +51,19 @@ export function createApiRouter(deps: Dependencies): Router {
   });
 
   router.get("/api/integrations/warehouse/orders", (_req, res) => {
+    const keyName = _req.header("x-api-key");
+    const keyObject = findApiKey(db, keyName);
+    
+    if (!keyObject) {
+      res.status(401).json({ error: "Invalid key" });
+      return;
+    }
+
+    if (!keyObject.scope || !keyObject.scope.includes("orders:read")) {
+      res.status(403).json({ error: "Your key does not allow this action" });
+      return;
+    }
+
     const orders = listAllOrders(db).map((order) => ({
       id: order.id,
       status: order.status,
