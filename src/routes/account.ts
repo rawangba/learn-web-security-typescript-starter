@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { generateSecret, generateURI } from "otplib";
 import QRCode from "qrcode";
 import { requireAuth, requireRecentAuth } from "../auth/accessControl.ts";
+import { verifyPassword } from "../auth/passwords.ts";
 import type { CurrentSession } from "../auth/sessions.ts";
 import { verifyTotpCode } from "../auth/totp.ts";
 import { generateBackupCodes } from "../auth/totpBackupCodes.ts";
@@ -192,6 +193,18 @@ export function createAccountRouter(deps: Dependencies): Router {
       return;
     }
     const existing = findUserByEmail(db, email);
+    if (existing && !verifyPassword(currentPassword, existing.password_hash)) {
+      res
+        .status(403)
+        .type("html")
+        .send(
+          renderAccountPage(
+            current,
+            "Re-enter your current password to change your email.",
+          ),
+        );
+      return;
+    }
     if (existing && existing.id !== current.user.id) {
       res
         .status(409)
