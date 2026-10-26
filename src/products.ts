@@ -163,11 +163,12 @@ export function searchProducts(db: DatabaseSync, query: string): Product[] {
     SELECT id, name, description, image_path, price_cents, cost_cents, inventory_count, is_active, created_at
     FROM products
     WHERE is_active = 1
-      AND (name LIKE '%${query}%' OR description LIKE '%${query}%')
+      AND (name LIKE ? OR description LIKE ?)
     ORDER BY name
   `;
+  const pattern = `%${query}%`;
 
-  return db.prepare(sql).all() as Product[];
+  return db.prepare(sql).all(pattern, pattern) as Product[];
 }
 
 export function searchPublicProducts(

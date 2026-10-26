@@ -18,6 +18,7 @@ export function parseReviewBody(value: unknown): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
+  value = value.trim();
 
   const bodyLength = value.length;
   if (bodyLength < 1 || bodyLength > MAX_REVIEW_BODY_LENGTH) {
