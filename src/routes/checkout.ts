@@ -22,6 +22,7 @@ import {
   findOrderById,
   InsufficientInventoryError,
 } from "../orders/index.ts";
+import { csrfTokensMatch } from "../csrf.ts";
 
 export function sendFulfillmentTimeout(
   response: Response,
@@ -78,6 +79,16 @@ export function createCheckoutRouter(deps: Dependencies): Router {
   router.post("/checkout", async (req, res) => {
     const current = requireAuth(db, req, res);
     if (!current) {
+      return;
+    }
+
+    if (!csrfTokensMatch(req.body?.csrfToken, current.session.csrf_token)) {
+      sendErrorPage(
+        res,
+        403,
+        "Forbidden",
+        "You do not have access to this resource"
+      );
       return;
     }
 

@@ -52,6 +52,7 @@ export function createApp(deps: Dependencies): express.Express {
     const cspNonce = randomBytes(16).toString("base64");
     res.locals.cspNonce = cspNonce;
     res.set("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", `default-src 'self'; script-src 'self' 'nonce-${cspNonce}'; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`);
     next();
   });
 

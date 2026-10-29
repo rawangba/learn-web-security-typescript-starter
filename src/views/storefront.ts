@@ -41,7 +41,7 @@ export function renderSearchPage(
   const resultSummary =
     query.length === 0
       ? "Enter a search term to find plushies."
-      : `${products.length} result${products.length === 1 ? "" : "s"} for “${query}”`;
+      : `${products.length} result${products.length === 1 ? "" : "s"} for “${escapeHtml(query)}”`;
   const items =
     products.length > 0
       ? renderProductList(products, current?.session.csrf_token, cartQuantities)
@@ -109,7 +109,7 @@ function renderSearchForm(query: string = ""): string {
         <input
           name="q"
           type="search"
-          value="${query}"
+          value="${escapeHtml(query)}"
           placeholder="teddy, sloth, fox"
         >
       </label>
