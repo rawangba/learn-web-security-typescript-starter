@@ -1,5 +1,7 @@
 import { randomBytes } from "node:crypto";
 import express, { type RequestHandler } from "express";
+import cors from "cors";
+import helmet from "helmet";
 import { validateRequestOrigin } from "./csrf.ts";
 import type { Dependencies } from "./dependencies.ts";
 import { errorHandler, sendErrorPage } from "./errors.ts";
@@ -21,6 +23,9 @@ import { createStorefrontRouter } from "./routes/storefront.ts";
 import { createSupportRouter } from "./routes/support.ts";
 import { migrateSensitiveDataAtRest } from "./storage/migrations.ts";
 
+// =
+// Using built-in CORS instead of custom Cross-Origin Resource Sharing header mechanism
+/*
 const apiCors: RequestHandler = (req, res, next) => {
   const origin = req.header("Origin");
 
@@ -43,6 +48,7 @@ const apiCors: RequestHandler = (req, res, next) => {
 
   next();
 };
+*/
 
 export function createApp(deps: Dependencies): express.Express {
   migrateSensitiveDataAtRest(deps.db, deps.keyring);
@@ -51,9 +57,35 @@ export function createApp(deps: Dependencies): express.Express {
   app.use((_req, res, next) => {
     const cspNonce = randomBytes(16).toString("base64");
     res.locals.cspNonce = cspNonce;
+    /*
     res.set("X-Content-Type-Options", "nosniff");
-    res.setHeader("Content-Security-Policy", `default-src 'self'; script-src 'self' 'nonce-${cspNonce}'; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`);
+    res.setHeader("Content-Security-Policy", `default-src 'self'; script-src 'self' 'nonce-${cspNonce}'; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'`);
+    res.set("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    */
     next();
+  });
+
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        scriptSrc: ["'self'", (_req, res) => `'nonce-${String((res as Response).locals.cspNonce)}'`],
+        styleSrc: ["'self'"],
+	frameSrc: ["'self'"],
+	upgradeInsecureRequests: null
+      },
+    },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    xFrameOptions: { action: "sameorigin" },
+    strictTransportSecurity: false,
+  }),
+  );
+
+  const helmetForShippingWidget = helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  });
+  app.use(['/shipping-widget.css', '/shipping-widget.js'], (req, res, next) => {
+    helmetForShippingWidget(req, res, next);
   });
 
   app.get("/health", (_req, res) => {
@@ -69,7 +101,13 @@ export function createApp(deps: Dependencies): express.Express {
   app.use(express.json());
   app.use(createPawPalRouter(deps));
   app.use(validateRequestOrigin(deps.appOrigin));
-  app.use("/api", apiCors);
+  app.use("/api/products", cors({
+    origin: "*",
+    credentials: false,
+    methods: ["GET"],
+    allowedHeaders: [],
+    }),
+  );
   app.use(createApiRouter(deps));
 
   app.use(createArchiveRouter(deps));
