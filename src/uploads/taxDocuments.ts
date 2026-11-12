@@ -55,7 +55,7 @@ export function storeTaxDocument(
   buffer: Buffer,
   keyring: Keyring | undefined,
 ): StoredTaxDocument | undefined {
-  const upload: TaxDocumentType = detectTaxDocumentType(buffer);
+  const upload = detectTaxDocumentType(buffer);
   if (!upload) {
     return undefined;
   }

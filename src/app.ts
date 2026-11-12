@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import express, { type RequestHandler } from "express";
+import express, { type Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { validateRequestOrigin } from "./csrf.ts";

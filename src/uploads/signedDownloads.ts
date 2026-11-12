@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
-const { createHmac, timingSafeEqual } = await import('node:crypto');
+const { createHmac } = await import('node:crypto');
+//const { timingSafeEqual } = await import('node:crypto');
 
 const SIGNED_DOWNLOAD_TTL_SECONDS = 5 * 60;
 

@@ -7,9 +7,10 @@ import {
   listOrderItems,
   listOrdersForUser,
   type Order,
+  type OrderItem,
 } from "../orders/index.ts";
-import { listProducts } from "../products.ts";
-import { findApiKey, type ApiKey } from "../auth/apiKeys.ts";
+import { listProducts, type Product } from "../products.ts";
+import { findApiKey } from "../auth/apiKeys.ts";
 
 type ProductResponse = {
   id: number;
@@ -106,7 +107,7 @@ export function createApiRouter(deps: Dependencies): Router {
   });
 
   router.get("/api/integrations/warehouse/orders", (_req, res) => {
-    const keyName = _req.header("x-api-key");
+    const keyName = _req.header("x-api-key") ?? "";
     const keyObject = findApiKey(db, keyName);
     
     if (!keyObject) {

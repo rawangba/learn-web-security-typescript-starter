@@ -13,7 +13,7 @@ type StoredSession = {
   csrf_token: string;
   expires_at: string;
   revoked_at: string | null;
-
+  last_authenticated_at: string;
   created_at: string;
 };
 

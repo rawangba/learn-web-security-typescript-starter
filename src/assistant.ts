@@ -57,7 +57,7 @@ export function runSimulatedAssistant(request: AssistantRequest): string {
     return "Order status is unavailable.";
   }
 
-  const requestedUserId = matchNumber(userMessage, /user\s*#?(\d+)/i);
+  //const requestedUserId = matchNumber(userMessage, /user\s*#?(\d+)/i);
   return statusTool.execute({
     orderId,
   });
