@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "./db/index.ts";
@@ -43,13 +42,13 @@ export function initDependencies(
     throw new Error("ACORN_FULFILLMENT_DELAY_MS must be a non-negative number");
   }
 
-  const inputSigningKey: String = requireEnv("DOWNLOAD_SIGNING_KEY");
-  if (inputSigningKey.length !== 64 && inputSigningKey.match(/[0-9A-Fa-f]{64}/).length !== 1) {
+  const inputSigningKey: string = requireEnv(env, "DOWNLOAD_SIGNING_KEY");
+  if (inputSigningKey.length !== 64 || /[^0-9a-f]/i.test(inputSigningKey)) {
     throw new Error("Invalid download signing key");
   }
   const downloadSigningKey = Buffer.from(inputSigningKey, 'hex');
 
-  const pawPalApiKey: string = requireEnv("PAWPAL_API_KEY");
+  const pawPalApiKey: string = requireEnv(env, "PAWPAL_API_KEY");
 
   const values = {
     appOrigin: new URL(env.APP_ORIGIN ?? "http://localhost:3000").origin,
@@ -67,8 +66,8 @@ export function initDependencies(
   return { ...values, db: openDatabase(values.databasePath) };
 }
 
-export function requireEnv(name: string): string {
-  const value = process.env[name];
+export function requireEnv(env: NodeJS.ProcessEnv, name: string): string {
+  const value = env[name];
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
